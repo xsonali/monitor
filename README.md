@@ -72,4 +72,8 @@ If you encounter issues, please check the Azure Portal, Terraform docs, or raise
 
 ---
 
+<img width="216" height="424" alt="rg-hub-logs" src="https://github.com/user-attachments/assets/5e22415b-1033-4f38-8f5b-d05e399bb445" />
+
+
 Created and maintained by Gholam Alam.
+
