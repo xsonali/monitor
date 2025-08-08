@@ -1,22 +1,19 @@
 # Original resource group for your firewall and main infra
-resource "azurerm_resource_group" "hub_vnet_rg" {
-  name     = "rg-hub-vnet"
-  location = "eastus" # your preferred region
+resource "azurerm_resource_group" "hub-vnet-rg" {
+  name     = "hub-vnet-rg-m617"
+  location = "australiaeast"
 }
 
 # New resource group for logs and monitoring
 resource "azurerm_resource_group" "rg_logs" {
   name     = "rg-hub-logs"
-  location = azurerm_resource_group.hub_vnet_rg.location
+  location = "australiaeast"
 }
 
-# Azure Firewall (in original RG)
-resource "azurerm_firewall" "hub_fw" {
-  name                = "hub-firewall"
-  resource_group_name = azurerm_resource_group.hub_vnet_rg.name
-  location            = azurerm_resource_group.hub_vnet_rg.location
-
-  # ... your firewall config here ...
+# Data source to reference your existing Azure Firewall
+data "azurerm_resource_group" "hub-vnet-rg-m617" {
+  name                = "hub-vnet-rg-m617"
+  resource_group_name = azurerm_resource_group.hub-vnet-rg-m617.name
 }
 
 # Log Analytics workspace (in logs RG)
@@ -37,7 +34,7 @@ resource "azurerm_log_analytics_workspace" "hub_logs" {
 # Diagnostic Settings sending Azure Firewall logs to Log Analytics in separate RG
 resource "azurerm_monitor_diagnostic_setting" "fw_logs" {
   name                       = "fw-diagnostics"
-  target_resource_id         = azurerm_firewall.hub_fw.id
+  target_resource_id         = data.azurerm_firewall.hub_fw.id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.hub_logs.id
 
   enabled_log {
@@ -63,57 +60,20 @@ resource "azurerm_sentinel_log_analytics_workspace_onboarding" "hub_logs" {
 
 # Sentinel Scheduled Alert (same workspace)
 resource "azurerm_sentinel_alert_rule_scheduled" "rdp_spike" {
+  depends_on = [
+    azurerm_sentinel_log_analytics_workspace_onboarding.hub_logs
+  ]
+
   name                       = "High RDP Traffic Detected"
   log_analytics_workspace_id = azurerm_log_analytics_workspace.hub_logs.id
   display_name               = "High RDP Traffic Detected"
-  severity                   = "Medium"
-  query_frequency            = "PT5M"
-  query_period               = "PT5M"
+  severity                   = "High"
+  query                      = <<QUERY
+SecurityEvent
+| where EventID == 4625 and AccountType == "User"
+QUERY
+  query_frequency            = "PT1H"
+  query_period               = "PT1H"
   trigger_operator           = "GreaterThan"
-  trigger_threshold          = 0
-  enabled                    = true
-  description                = "Detects unusually high RDP traffic through Azure Firewall"
-
-  query = <<KQL
-AzureDiagnostics
-| where Category == "AzureFirewallNetworkRule"
-| where Action == "Allow"
-| where Protocol == "TCP" and DestinationPort == "3389"
-| summarize count() by bin(TimeGenerated, 5m), SourceIP
-| where count_ > 100
-KQL
-
-  tactics             = ["Execution"]
-  techniques          = ["T1046"]
-  suppression_enabled = false
-
-  event_grouping {
-    aggregation_method = "AlertPerResult"
-  }
-
-  incident {
-    create_incident_enabled = true
-
-    grouping {
-      enabled                 = true
-      reopen_closed_incidents = true
-      lookback_duration       = "PT1H"
-      entity_matching_method  = "AllEntities"
-    }
-  }
-
-  entity_mapping {
-    entity_type = "IP"
-
-    field_mapping {
-      column_name = "SourceIP"
-      identifier  = "Address"
-    }
-  }
-
-  custom_details = {
-    environment = "hub_vnet"
-    createdBy   = "terraform"
-    owner       = "Gholam"
-  }
+  trigger_threshold          = 5
 }
