@@ -1,17 +1,16 @@
-# Dockerfile
+FROM ubuntu:22.04
 
-FROM hashicorp/terraform:latest
+RUN apt-get update && apt-get install -y \
+    curl \
+    bash \
+    python3 \
+    python3-pip \
+    software-properties-common
 
-# Install Azure CLI dependencies
-RUN apk add --no-cache curl bash python3 py3-pip groff less openssl
+# Add HashiCorp repo
+RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
+RUN apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
 
-# Install Azure CLI
+# Install terraform and azure-cli
+RUN apt-get update && apt-get install -y terraform
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
-
-# Set working directory
-WORKDIR /workspace
-
-# Copy your Terraform config into the container (optional)
-# COPY . /workspace
-
-ENTRYPOINT ["terraform"]
