@@ -1,0 +1,17 @@
+// .devcontainer/devcontainer.json
+{
+  "name": "Terraform Azure Dev Container",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/workspace",
+  "extensions": [
+    "hashicorp.terraform",
+    "ms-azuretools.vscode-azureterraform"
+  ],
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash"
+  },
+  "remoteUser": "vscode"
+}
