@@ -1,6 +1,8 @@
 Azure Sentinel Monitoring Terraform Configuration
 
-This repository contains Terraform code to deploy Azure Sentinel monitoring on an existing Azure Firewall within your Azure environment.
+This repository contains Terraform code to deploy Azure Sentinel monitoring on an existing Azure Firewall within your Azure environment. The repository also includes a storage-deploy.json ARM template file, which has not yet been deployed to the current resource group. This file is kept for future deployment if storage resources are needed, such as for archiving logs or enabling diagnostics.
+
+Keeping this template in the repository allows easy reuse and version control. It is recommended to deploy the storage account only when required. Additionally, including documentation about the purpose and usage of this template will help maintain clarity for future reference.
 
 ---
 
@@ -76,4 +78,5 @@ If you encounter issues, please check the Azure Portal, Terraform docs, or raise
 
 
 Created and maintained by Gholam Alam.
+
 
