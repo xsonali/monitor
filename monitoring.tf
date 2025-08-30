@@ -1,6 +1,6 @@
-# Original resource group for your firewall and main infra
+# I have used the resource group name of the hub vnet
 resource "azurerm_resource_group" "hub-vnet-rg" {
-  name     = "hub-vnet-rg-m617"
+  name     = "hub-vnet-rg-m617" # Name may change after recreation of the hub-vnet-rg
   location = "australiaeast"
 }
 
@@ -10,13 +10,12 @@ resource "azurerm_resource_group" "rg_logs" {
   location = "australiaeast"
 }
 
-# Data source to reference your existing Azure Firewall
-# Data source to reference your existing Resource Group
+# Data source to reference the existing Resource Group of hub vnet
 data "azurerm_resource_group" "hub_vnet_rg_m617" {
   name = "hub-vnet-rg-m617"
 }
 
-# Data source to reference your existing Azure Firewall
+# Data source to reference the existing Azure Firewall
 data "azurerm_firewall" "hub_fw" {
   name                = "hub-fw"
   resource_group_name = data.azurerm_resource_group.hub_vnet_rg_m617.name
@@ -40,7 +39,7 @@ resource "azurerm_log_analytics_workspace" "hub_logs" {
 # Diagnostic Settings sending Azure Firewall logs to Log Analytics in separate RG
 resource "azurerm_monitor_diagnostic_setting" "fw_logs" {
   name                       = "fw-diagnostics"
-  target_resource_id         = data.azurerm_firewall.hub_fw.id
+  target_resource_id         = data.azurerm_firewall.hub_fw.id # Previously created
   log_analytics_workspace_id = azurerm_log_analytics_workspace.hub_logs.id
 
   enabled_log {
